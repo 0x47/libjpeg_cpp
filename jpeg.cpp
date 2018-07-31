@@ -12,7 +12,8 @@ namespace marengo
 namespace jpeg
 {
 
-Image::Image( const std::string& fileName )
+Image::Image( const std::string& fileName, COMPONENT_ORDER order ) :
+    m_order(order)
 {
     // Creating a custom deleter for the decompressInfo pointer
     // to ensure ::jpeg_destroy_compress() gets called even if
@@ -88,6 +89,11 @@ Image::Image( const std::string& fileName )
         std::vector<uint8_t> vec(row_stride);
         uint8_t* p = vec.data();
         ::jpeg_read_scanlines( decompressInfo.get(), &p, 1 );
+        if (order == ORDER_BGR && m_pixelSize == 3) {
+            for (size_t i = 0; i < row_stride; i += 3) {
+                std::swap(vec[i], vec[i + 2]);
+            }
+        }
         m_bitmapData.push_back( vec );
     }
     ::jpeg_finish_decompress( decompressInfo.get() );
@@ -96,6 +102,7 @@ Image::Image( const std::string& fileName )
 // Copy constructor
 Image::Image( const Image& rhs )
 {
+    m_order         = rhs.m_order;
     m_errorMgr      = rhs.m_errorMgr;
     m_bitmapData    = rhs.m_bitmapData;
     m_width         = rhs.m_width;
@@ -209,6 +216,11 @@ uint8_t Image::getLuminance( size_t x, size_t y ) const
     if ( vec.size() == 3 )
     {
         // fast approximation of luminance:
+        if (m_order == ORDER_BGR) {
+            return static_cast<uint8_t>(
+                ( vec[0] + vec[1] * 3 + vec[2] * 2 ) / 6
+                );
+        }
         return static_cast<uint8_t>(
             ( vec[0] * 2 + vec[1] * 3 + vec[2] ) / 6
             );

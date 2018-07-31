@@ -13,13 +13,19 @@ namespace marengo
 namespace jpeg
 {
 
+enum COMPONENT_ORDER {
+    ORDER_RGB,
+    ORDER_BGR
+};
+
 class Image
 {
 public:
     // Currently can only construct with an existing file.
     // Will throw if file cannot be loaded, or is in the wrong format,
     // or some other error is encountered.
-    explicit Image( const std::string& fileName );
+    explicit Image( const std::string& fileName,
+            COMPONENT_ORDER order = ORDER_RGB );
 
     // We can construct from an existing image object. This allows us
     // to work on a copy (e.g. shrink then save) without affecting the
@@ -45,10 +51,11 @@ public:
     size_t getHeight()    const { return m_height; }
     size_t getWidth()     const { return m_width;  }
     size_t getPixelSize() const { return m_pixelSize; }
+    const std::vector<std::vector<uint8_t>>& raw() const { return m_bitmapData; };
 
     // Will return a vector of pixel components. The vector's
-    // size will be 1 for monochrome or 3 for RGB.
-    // Elements for the latter will be in order R, G, B.
+    // size will be 1 for monochrome or 3 for RGB and BGR.
+    // Elements for the latter will be in order according to m_order.
     std::vector<uint8_t> getPixel( size_t x, size_t y ) const;
 
     // Returns a fast approximation of perceived brightness for RGB images.
@@ -77,6 +84,7 @@ public:
     void resize( size_t newWidth );
 
 private:
+    COMPONENT_ORDER                   m_order;
     // Note that m_errorMgr is a shared ptr and will be shared
     // between objects if one copy constructs from another
     std::shared_ptr<::jpeg_error_mgr> m_errorMgr;
