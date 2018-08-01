@@ -29,17 +29,17 @@ set(source_files_test
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
-find_library(LIBJPEG jpeg)
-if(LIBJPEG-NOTFOUND)
+find_library(LIBJPEG_CPP_LIBJPEG_LIB jpeg)
+if(LIBJPEG_CPP_LIBJPEG_LIB-NOTFOUND)
 	message(FATAL_ERROR "LibJPEG not found")
 endif()
-list(APPEND external_libraries ${LIBJPEG})
+list(APPEND external_libraries ${LIBJPEG_CPP_LIBJPEG_LIB})
 
 add_library(${tname} ${source_files} ${header_files})
 target_link_libraries(${tname} PUBLIC ${external_libraries})
 target_include_directories(${tname} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(${tname} PUBLIC ${warning_flags})
 
-add_executable(test EXCLUDE_FROM_ALL ${source_files_test})
-target_link_libraries(test PUBLIC ${tname})
-target_compile_options(test PUBLIC ${warning_flags})
+add_executable(${tname}_test EXCLUDE_FROM_ALL ${source_files_test})
+target_link_libraries(${tname}_test PUBLIC ${tname})
+target_compile_options(${tname}_test PUBLIC ${warning_flags})
